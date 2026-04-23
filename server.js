@@ -56,6 +56,12 @@ app.post('/api/generate', async (req, res) => {
   }
 });
 
+Catch-all 404 handler
+app.use((req, res) => {
+  console.log('404 - Path not found:', req.method, req.path);
+  res.status(404).json({ error: 'Not found', path: req.path });
+});
+
 app.listen(PORT, () => {
   console.log(`Stratus proxy running on port ${PORT}`);
   console.log(`Calculator available at http://localhost:${PORT}/calculator`);
