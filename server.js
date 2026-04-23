@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -18,7 +19,10 @@ app.use(express.json({ limit: '2mb' }));
 
 // Serve the calculator
 app.get('/calculator', (req, res) => {
-  res.sendFile(path.join(__dirname, 'stratus_calculator.html'));
+  const filePath = path.join(__dirname, 'stratus_calculator.html');
+  console.log('Attempting to serve:', filePath);
+  console.log('File exists:', fs.existsSync(filePath));
+  res.sendFile(filePath);
 });
 
 // Health check
