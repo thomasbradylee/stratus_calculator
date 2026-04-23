@@ -1,0 +1,17 @@
+{
+  "name": "stratus-proxy",
+  "version": "1.0.0",
+  "description": "Anthropic API proxy for Stratus calculator",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.2"
+  }
+}

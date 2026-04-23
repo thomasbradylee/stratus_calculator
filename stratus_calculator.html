@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stratus — Revenue Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-primary: #ffffff; --bg-secondary: #f5f4f0; --bg-tertiary: #eeede9;
+      --text-primary: #1a1a18; --text-secondary: #5f5e5a; --text-tertiary: #888780;
+      --border-light: rgba(0,0,0,0.10); --border-mid: rgba(0,0,0,0.18); --border-strong: rgba(0,0,0,0.28);
+      --radius-md: 8px; --radius-lg: 12px;
+      --blue-50: #E6F1FB; --blue-400: #378ADD; --blue-600: #185FA5; --blue-800: #0C447C;
+      --purple-50: #EEEDFE; --purple-400: #7F77DD; --purple-600: #534AB7; --purple-800: #3C3489;
+      --teal-50: #E1F5EE; --teal-400: #1D9E75; --teal-600: #0F6E56; --teal-800: #085041;
+      --amber-50: #FAEEDA; --amber-400: #BA7517; --amber-600: #854F0B; --amber-800: #633806;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: #1e1e1c; --bg-secondary: #272725; --bg-tertiary: #2e2e2b;
+        --text-primary: #f0efea; --text-secondary: #a8a79f; --text-tertiary: #6e6d68;
+        --border-light: rgba(255,255,255,0.08); --border-mid: rgba(255,255,255,0.14); --border-strong: rgba(255,255,255,0.22);
+        --blue-50: #0c2d4a; --blue-400: #85B7EB; --blue-600: #378ADD; --blue-800: #B5D4F4;
+        --purple-50: #1e1b3a; --purple-400: #AFA9EC; --purple-600: #7F77DD; --purple-800: #CECBF6;
+        --teal-50: #0b2b20; --teal-400: #5DCAA5; --teal-600: #1D9E75; --teal-800: #9FE1CB;
+        --amber-50: #2a1f08; --amber-400: #EF9F27; --amber-600: #BA7517; --amber-800: #FAC775;
+      }
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg-tertiary); color: var(--text-primary); min-height: 100vh; padding: 2rem 1rem 4rem; }
+    .page { max-width: 720px; margin: 0 auto; }
+    .page-header { margin-bottom: 2rem; }
+    .brand { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 6px; }
+    .page-title { font-size: 26px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+    .page-sub { font-size: 14px; color: var(--text-secondary); }
+    .section-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 12px; }
+    .card { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 14px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+    .field-row:last-child { margin-bottom: 0; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; color: var(--text-secondary); }
+    input[type=text], input[type=number], select {
+      width: 100%; padding: 9px 11px; font-size: 14px; font-weight: 500;
+      color: var(--text-primary); background: var(--bg-secondary);
+      border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
+      outline: none; font-family: inherit; transition: border-color .15s;
+    }
+    input:focus, select:focus { border-color: var(--border-strong); }
+    .tier-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 8px; }
+    .tier-btn { padding: 10px 8px; border: 0.5px solid var(--border-light); border-radius: var(--radius-md); background: var(--bg-secondary); cursor: pointer; text-align: center; transition: all .15s; font-family: inherit; }
+    .tier-btn:hover { border-color: var(--border-mid); }
+    .tier-name { font-size: 13px; font-weight: 500; color: var(--text-primary); display: block; margin-bottom: 2px; }
+    .tier-price { font-size: 11px; color: var(--text-tertiary); }
+    .tier-btn.active-basic   { border-color: var(--blue-400);   background: var(--blue-50);   }
+    .tier-btn.active-basic   .tier-name { color: var(--blue-800); } .tier-btn.active-basic   .tier-price { color: var(--blue-600); }
+    .tier-btn.active-premium { border-color: var(--purple-400); background: var(--purple-50); }
+    .tier-btn.active-premium .tier-name { color: var(--purple-800); } .tier-btn.active-premium .tier-price { color: var(--purple-600); }
+    .tier-btn.active-luxe    { border-color: var(--teal-400);   background: var(--teal-50);   }
+    .tier-btn.active-luxe    .tier-name { color: var(--teal-800); } .tier-btn.active-luxe    .tier-price { color: var(--teal-600); }
+    .tier-btn.active-custom  { border-color: #D85A30; background: #FAECE7; }
+    .tier-btn.active-custom  .tier-name { color: #712B13; } .tier-btn.active-custom  .tier-price { color: #993C1D; }
+    .tier-detail { font-size: 12px; color: var(--text-tertiary); min-height: 16px; }
+    .hidden { display: none !important; }
+    .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .toggle-label { font-size: 13px; color: var(--text-secondary); }
+    .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--border-mid); border-radius: 10px; cursor: pointer; transition: .2s; }
+    .toggle-slider:before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: .2s; }
+    .toggle input:checked + .toggle-slider { background: var(--teal-400); }
+    .toggle input:checked + .toggle-slider:before { transform: translateX(16px); }
+    .prod-select { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 8px; }
+    .prod-btn { padding: 9px 8px; border: 0.5px solid var(--border-light); border-radius: var(--radius-md); background: var(--bg-secondary); cursor: pointer; text-align: center; font-family: inherit; transition: all .15s; }
+    .prod-btn:hover { border-color: var(--border-mid); }
+    .pname { font-size: 12px; font-weight: 500; color: var(--text-primary); display: block; margin-bottom: 2px; }
+    .pprice { font-size: 11px; color: var(--text-tertiary); }
+    .prod-btn.active-prod { border-color: var(--teal-400); background: var(--teal-50); }
+    .prod-btn.active-prod .pname { color: var(--teal-800); } .prod-btn.active-prod .pprice { color: var(--teal-600); }
+    .term-toggle { display: grid; grid-template-columns: 1fr 1fr; border: 0.5px solid var(--border-mid); border-radius: var(--radius-md); overflow: hidden; }
+    .term-btn { padding: 10px 12px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; border: none; background: var(--bg-secondary); color: var(--text-secondary); transition: all .15s; text-align: center; }
+    .term-btn:first-child { border-right: 0.5px solid var(--border-mid); }
+    .term-btn.active-term { background: var(--amber-50); color: var(--amber-800); }
+    .discount-badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 20px; background: var(--amber-400); color: white; margin-left: 6px; font-weight: 500; vertical-align: middle; }
+    .term-btn.active-term .discount-badge { background: var(--amber-800); }
+    .results-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 10px; margin-top: 6px; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 14px; }
+    .metric { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-md); padding: 12px; }
+    .metric-label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 4px; }
+    .metric-value { font-size: 18px; font-weight: 500; color: var(--text-primary); }
+    .metric-value.blue { color: var(--blue-600); } .metric-value.purple { color: var(--purple-600); } .metric-value.teal { color: var(--teal-600); }
+    .bar-section { margin-bottom: 1rem; }
+    .bar-label-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+    .bar-track { height: 10px; border-radius: 5px; background: var(--bg-secondary); position: relative; overflow: hidden; }
+    .bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; transition: width .3s, left .3s; }
+    .legend-row { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    hr.divider { border: none; border-top: 0.5px solid var(--border-light); margin: 1rem 0; }
+    .summary-row { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; border-bottom: 0.5px solid var(--border-light); }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-row.total { padding-top: 10px; }
+    .summary-label { font-size: 13px; color: var(--text-secondary); }
+    .summary-value { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .summary-value.teal { color: var(--teal-600); } .summary-value.blue { color: var(--blue-600); } .summary-value.amber { color: var(--amber-600); }
+    .summary-value.big { font-size: 20px; }
+    .savings-callout { background: var(--amber-50); border: 0.5px solid var(--amber-400); border-radius: var(--radius-md); padding: 10px 14px; margin-top: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .savings-label { font-size: 12px; color: var(--amber-600); }
+    .savings-value { font-size: 14px; font-weight: 500; color: var(--amber-800); }
+    .export-card { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 14px; }
+    .export-title { font-size: 15px; font-weight: 500; color: var(--text-primary); margin-bottom: 2px; }
+    .export-sub { font-size: 12px; color: var(--text-tertiary); margin-bottom: 1rem; }
+    .export-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+    .export-opt { padding: 14px; border: 0.5px solid var(--border-light); border-radius: var(--radius-md); background: var(--bg-secondary); cursor: pointer; text-align: center; transition: all .15s; font-family: inherit; }
+    .export-opt:hover { border-color: var(--border-mid); background: var(--bg-primary); }
+    .export-opt.selected { border-color: var(--teal-400); background: var(--teal-50); }
+    .opt-icon { font-size: 22px; margin-bottom: 6px; display: block; }
+    .opt-name { font-size: 13px; font-weight: 500; color: var(--text-primary); display: block; margin-bottom: 2px; }
+    .export-opt.selected .opt-name { color: var(--teal-800); }
+    .opt-desc { font-size: 11px; color: var(--text-tertiary); }
+    .generate-btn { width: 100%; padding: 12px; font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; border-radius: var(--radius-md); border: 0.5px solid var(--teal-400); background: var(--teal-50); color: var(--teal-800); transition: all .15s; }
+    .generate-btn:hover { background: var(--teal-400); color: white; }
+    .generate-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .ai-status { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--bg-secondary); border-radius: var(--radius-md); margin-top: 10px; font-size: 13px; color: var(--text-secondary); }
+    .spinner { width: 16px; height: 16px; border: 2px solid var(--border-mid); border-top-color: var(--teal-400); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .preview-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; z-index: 1000; overflow-y: auto; }
+    .preview-modal { background: var(--bg-primary); border-radius: var(--radius-lg); width: 100%; max-width: 780px; overflow: hidden; }
+    .preview-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 0.5px solid var(--border-light); background: var(--bg-secondary); }
+    .preview-toolbar-title { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .toolbar-actions { display: flex; gap: 8px; }
+    .tb-btn { padding: 7px 14px; font-size: 12px; font-family: inherit; cursor: pointer; border-radius: var(--radius-md); border: 0.5px solid var(--border-mid); background: var(--bg-primary); color: var(--text-primary); transition: all .15s; }
+    .tb-btn:hover { background: var(--bg-secondary); }
+    .tb-btn.primary { background: var(--teal-50); border-color: var(--teal-400); color: var(--teal-800); }
+    .tb-btn.primary:hover { background: var(--teal-400); color: white; }
+    .preview-iframe { width: 100%; border: none; display: block; }
+    .footer-note { font-size: 12px; color: var(--text-tertiary); text-align: center; margin-top: 1.5rem; }
+    @media (max-width: 560px) {
+      .tier-grid { grid-template-columns: repeat(2,1fr); }
+      .metrics-grid { grid-template-columns: repeat(2,1fr); }
+      .field-row.three { grid-template-columns: 1fr 1fr; }
+      .field-row.three .field:last-child { grid-column: 1 / -1; }
+      .export-options { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <div class="brand">Stratus Entertainment Group</div>
+    <h1 class="page-title">Revenue calculator</h1>
+    <p class="page-sub">Enter venue details to project revenue impact, then generate a ready-to-share proposal.</p>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Venue details</div>
+    <div class="field-row">
+      <div class="field"><label for="vname">Venue name</label><input type="text" id="vname" placeholder="e.g. The Anchor"></div>
+      <div class="field">
+        <label for="vtype">Venue type</label>
+        <select id="vtype">
+          <option>Bar / Restaurant</option><option>Hotel / Resort</option>
+          <option>Country Club</option><option>Wine Bar</option>
+          <option>Campground</option><option>Wedding Venue</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row three">
+      <div class="field"><label for="cap">Venue capacity</label><input type="number" id="cap" value="300" min="50" max="5000" step="10"></div>
+      <div class="field"><label for="spend">Avg spend per guest ($)</label><input type="number" id="spend" value="45" min="10" max="500" step="5"></div>
+      <div class="field"><label for="occ">Occupancy model (%)</label><input type="number" id="occ" value="75" min="10" max="100" step="5"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Contract term</div>
+    <div class="term-toggle">
+      <button class="term-btn" id="term-6"  onclick="setTerm(6)">6 months</button>
+      <button class="term-btn" id="term-12" onclick="setTerm(12)">12 months <span class="discount-badge">5% off</span></button>
+    </div>
+    <div id="term-note" style="font-size:12px;color:var(--text-tertiary);margin-top:8px;min-height:16px;"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Stratus tier</div>
+    <div class="tier-grid">
+      <button class="tier-btn" data-tier="basic"   onclick="setTier('basic')">  <span class="tier-name">Basic</span>  <span class="tier-price">$23,500/mo</span></button>
+      <button class="tier-btn" data-tier="premium" onclick="setTier('premium')"><span class="tier-name">Premium</span><span class="tier-price">$36,500/mo</span></button>
+      <button class="tier-btn" data-tier="luxe"    onclick="setTier('luxe')">   <span class="tier-name">Luxe</span>   <span class="tier-price">$62,500/mo</span></button>
+    </div>
+    <div class="tier-detail" id="tier-detail"></div>
+    <div style="margin-top:12px">
+      <div class="field"><label for="acts">Acts per week</label><input type="number" id="acts" value="4" min="1" max="21" step="1"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Add-ons</div>
+    <div class="toggle-row">
+      <label class="toggle"><input type="checkbox" id="prod-toggle" onchange="toggleProd()"><span class="toggle-slider"></span></label>
+      <span class="toggle-label">Include production kit activation fee</span>
+    </div>
+    <div id="prod-field" class="hidden">
+      <div class="section-label" style="margin-bottom:6px">Select kit tier</div>
+      <div class="prod-select">
+        <button class="prod-btn" data-prod="basic"    onclick="setProd('basic')">   <span class="pname">Basic</span>    <span class="pprice">$12,000</span></button>
+        <button class="prod-btn" data-prod="standard" onclick="setProd('standard')"><span class="pname">Standard</span><span class="pprice">$18,000</span></button>
+        <button class="prod-btn" data-prod="luxe"     onclick="setProd('luxe')">    <span class="pname">Luxe</span>    <span class="pprice">$35,000</span></button>
+      </div>
+    </div>
+    <div class="toggle-row" style="margin-top:14px">
+      <label class="toggle"><input type="checkbox" id="cover-toggle" onchange="toggleCover()"><span class="toggle-slider"></span></label>
+      <span class="toggle-label">Venue charges cover (Luxe exclusive feature)</span>
+    </div>
+    <div id="cover-fields" class="hidden" style="margin-top:10px">
+      <div class="field-row">
+        <div class="field"><label for="cover-amt">Cover charge per person ($)</label><input type="number" id="cover-amt" value="15" min="1" max="100" step="1"></div>
+        <div class="field"><label for="cover-nights">Cover nights per week</label><input type="number" id="cover-nights" value="2" min="1" max="7" step="1"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-label">Projected revenue impact</div>
+  <div class="metrics-grid">
+    <div class="metric"><div class="metric-label">Baseline weekly rev</div><div class="metric-value" id="m-baseline">—</div></div>
+    <div class="metric"><div class="metric-label">Lifted weekly rev</div><div class="metric-value blue" id="m-lifted">—</div></div>
+    <div class="metric"><div class="metric-label">Cover weekly rev</div><div class="metric-value purple" id="m-cover">—</div></div>
+    <div class="metric"><div class="metric-label">Total weekly rev</div><div class="metric-value teal" id="m-total">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="bar-section">
+      <div class="bar-label-row"><span>Weekly revenue composition</span><span id="bar-pct" style="font-weight:500"></span></div>
+      <div class="bar-track">
+        <div class="bar-fill" id="bar-base" style="background:#B4B2A9;width:0%"></div>
+        <div class="bar-fill" id="bar-lift" style="background:#378ADD;left:0%;width:0%"></div>
+        <div class="bar-fill" id="bar-cov"  style="background:#1D9E75;left:0%;width:0%"></div>
+      </div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background:#B4B2A9"></div>Baseline</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#378ADD"></div>Stratus lift (+40%)</div>
+        <div class="legend-item" id="cov-legend" style="display:none"><div class="legend-dot" style="background:#1D9E75"></div>Cover revenue</div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="summary-row"><span class="summary-label">Base monthly contract</span><span class="summary-value" id="s-base-contract">—</span></div>
+    <div class="summary-row" id="s-discount-row" style="display:none">
+      <span class="summary-label">12-month discount (5%)</span>
+      <span class="summary-value amber" id="s-discount">—</span>
+    </div>
+    <div class="summary-row" id="s-effective-row" style="display:none">
+      <span class="summary-label">Effective monthly rate</span>
+      <span class="summary-value" id="s-effective">—</span>
+    </div>
+    <div class="summary-row" id="s-prod-row" style="display:none"><span class="summary-label">Production kit (one-time)</span><span class="summary-value" id="s-prod">—</span></div>
+    <div class="summary-row"><span class="summary-label">Monthly revenue (baseline)</span><span class="summary-value" id="s-base-mo">—</span></div>
+    <div class="summary-row"><span class="summary-label">Monthly revenue (with Stratus)</span><span class="summary-value blue" id="s-new-mo">—</span></div>
+    <div class="summary-row"><span class="summary-label">Monthly revenue lift</span><span class="summary-value" id="s-lift-mo">—</span></div>
+    <div class="summary-row total">
+      <span class="summary-label" style="font-weight:500;color:var(--text-primary)">Net monthly gain after contract</span>
+      <span class="summary-value teal big" id="s-net">—</span>
+    </div>
+    <div class="summary-row"><span class="summary-label">ROI on contract spend</span><span class="summary-value teal" id="s-roi">—</span></div>
+    <div class="summary-row" id="s-payback-row" style="display:none"><span class="summary-label">Production kit payback period</span><span class="summary-value" id="s-payback">—</span></div>
+    <div id="savings-callout" class="savings-callout hidden">
+      <span class="savings-label">Total savings with 12-month term</span>
+      <span class="savings-value" id="savings-total">—</span>
+    </div>
+  </div>
+
+  <div class="export-card">
+    <div class="export-title">Generate proposal</div>
+    <div class="export-sub">AI-written, formatted and ready to share</div>
+    <div class="export-options">
+      <button class="export-opt selected" id="opt-pdf" onclick="selectExport('pdf')">
+        <span class="opt-icon">📄</span>
+        <span class="opt-name">PDF one-pager</span>
+        <span class="opt-desc">Print-ready proposal with full revenue breakdown</span>
+      </button>
+      <button class="export-opt" id="opt-slide" onclick="selectExport('slide')">
+        <span class="opt-icon">🖥️</span>
+        <span class="opt-name">Pitch slide</span>
+        <span class="opt-desc">Single-slide deck view, ready to present</span>
+      </button>
+    </div>
+    <button class="generate-btn" id="gen-btn" onclick="generate()">Generate proposal →</button>
+    <div id="ai-status" class="hidden"></div>
+  </div>
+
+  <p class="footer-note">Stratus Entertainment Group &nbsp;·&nbsp; Results based on a 40% revenue lift model and 4.33 weeks/month. Actual results may vary.</p>
+</div>
+
+<div class="preview-backdrop hidden" id="preview-backdrop">
+  <div class="preview-modal">
+    <div class="preview-toolbar">
+      <span class="preview-toolbar-title" id="preview-label">Proposal preview</span>
+      <div class="toolbar-actions">
+        <button class="tb-btn primary" onclick="downloadProposal()">Download</button>
+        <button class="tb-btn" onclick="closePreview()">Close</button>
+      </div>
+    </div>
+    <iframe id="preview-iframe" class="preview-iframe" style="min-height:680px"></iframe>
+  </div>
+</div>
+
+<script>
+// ── Configuration ──────────────────────────────────────────────
+// Empty string = relative URL (use when HTML is served from the proxy itself)
+// For local dev outside Railway: change to 'http://localhost:3000'
+const PROXY_URL = '';
+// ───────────────────────────────────────────────────────────────
+
+const TIERS = {
+  basic:   { fee: 23500, acts: 3, label: 'Fri / Sat / Sun · 3 nights of music',                    nights: 'Friday, Saturday & Sunday' },
+  premium: { fee: 36500, acts: 4, label: 'Thurs–Sun · 4 nights + promotion package',               nights: 'Thursday through Sunday' },
+  luxe:    { fee: 62500, acts: 5, label: '4 nights + premium production, promotion & content',      nights: 'Thursday through Sunday (premium nights)' }
+};
+const PROD_COST = { basic: 12000, standard: 18000, luxe: 35000 };
+
+let currentTier = 'premium', currentProd = null, exportType = 'pdf', contractTerm = 6;
+let lastData = null, lastHtml = null;
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+function setTerm(months) {
+  contractTerm = months;
+  document.getElementById('term-6').classList.toggle('active-term', months === 6);
+  document.getElementById('term-12').classList.toggle('active-term', months === 12);
+  document.getElementById('term-note').textContent = months === 12
+    ? '5% discount applied — saves you money over the full term commitment.'
+    : '6-month rolling contract. Switch to 12 months to unlock a 5% rate discount.';
+  calc();
+}
+
+function setTier(t) {
+  currentTier = t;
+  document.querySelectorAll('.tier-btn').forEach(b => b.className = 'tier-btn');
+  document.querySelector('[data-tier='+t+']').className = 'tier-btn active-'+t;
+  document.getElementById('tier-detail').textContent = TIERS[t].label;
+  document.getElementById('acts').value = TIERS[t].acts;
+  calc();
+}
+
+function setProd(p) {
+  currentProd = p;
+  document.querySelectorAll('.prod-btn').forEach(b => b.className = 'prod-btn');
+  document.querySelector('[data-prod='+p+']').className = 'prod-btn active-prod';
+  calc();
+}
+
+function toggleProd() {
+  const on = document.getElementById('prod-toggle').checked;
+  document.getElementById('prod-field').classList.toggle('hidden', !on);
+  document.getElementById('s-prod-row').style.display = on ? 'flex' : 'none';
+  document.getElementById('s-payback-row').style.display = on ? 'flex' : 'none';
+  if (on && !currentProd) setProd('standard');
+  if (!on) currentProd = null;
+  calc();
+}
+
+function toggleCover() {
+  const on = document.getElementById('cover-toggle').checked;
+  document.getElementById('cover-fields').classList.toggle('hidden', !on);
+  calc();
+}
+
+function selectExport(type) {
+  exportType = type;
+  document.getElementById('opt-pdf').classList.toggle('selected', type === 'pdf');
+  document.getElementById('opt-slide').classList.toggle('selected', type === 'slide');
+}
+
+function calc() {
+  const cap   = parseFloat(document.getElementById('cap').value)   || 300;
+  const spend = parseFloat(document.getElementById('spend').value) || 45;
+  const occ   = (parseFloat(document.getElementById('occ').value)  || 75) / 100;
+  const acts  = parseFloat(document.getElementById('acts').value)  || 4;
+
+  const baseFee = TIERS[currentTier].fee;
+
+  const is12 = contractTerm === 12;
+  const discountAmt  = is12 ? Math.round(baseFee * 0.05) : 0;
+  const effectiveFee = baseFee - discountAmt;
+  const termSavings  = discountAmt * 12;
+
+  document.getElementById('s-discount-row').style.display  = is12 ? 'flex' : 'none';
+  document.getElementById('s-effective-row').style.display = is12 ? 'flex' : 'none';
+  document.getElementById('savings-callout').classList.toggle('hidden', !is12);
+  if (is12) {
+    document.getElementById('s-discount').textContent  = '−' + fmt(discountAmt) + '/mo';
+    document.getElementById('s-effective').textContent = fmt(effectiveFee) + '/mo';
+    document.getElementById('savings-total').textContent = fmt(termSavings) + ' over 12 months';
+  }
+
+  const baseWeekly   = cap * occ * spend * acts;
+  const liftedWeekly = baseWeekly * 1.40;
+  const liftDelta    = liftedWeekly - baseWeekly;
+
+  const coverOn = document.getElementById('cover-toggle').checked;
+  document.getElementById('cov-legend').style.display = coverOn ? 'flex' : 'none';
+  let coverWeekly = 0;
+  if (coverOn) {
+    const coverAmt    = parseFloat(document.getElementById('cover-amt').value)    || 15;
+    const coverNights = parseFloat(document.getElementById('cover-nights').value) || 2;
+    coverWeekly = cap * occ * coverAmt * coverNights;
+  }
+
+  const totalWeekly  = liftedWeekly + coverWeekly;
+  const baseMo       = baseWeekly  * 4.33;
+  const newMo        = totalWeekly * 4.33;
+  const liftMo       = newMo - baseMo;
+  const netMo        = liftMo - effectiveFee;
+  const roi          = effectiveFee > 0 ? Math.round(liftMo / effectiveFee) : 0;
+  const totalLiftPct = Math.round(((totalWeekly / baseWeekly) - 1) * 100);
+
+  document.getElementById('m-baseline').textContent = fmt(baseWeekly);
+  document.getElementById('m-lifted').textContent   = fmt(liftedWeekly);
+  document.getElementById('m-cover').textContent    = coverOn ? fmt(coverWeekly) : '—';
+  document.getElementById('m-total').textContent    = fmt(totalWeekly);
+
+  const basePct = totalWeekly > 0 ? (baseWeekly  / totalWeekly * 100) : 0;
+  const liftPct = totalWeekly > 0 ? (liftDelta   / totalWeekly * 100) : 0;
+  const covPct  = totalWeekly > 0 ? (coverWeekly / totalWeekly * 100) : 0;
+
+  document.getElementById('bar-base').style.width = basePct.toFixed(1) + '%';
+  document.getElementById('bar-lift').style.left  = basePct.toFixed(1) + '%';
+  document.getElementById('bar-lift').style.width = liftPct.toFixed(1) + '%';
+  document.getElementById('bar-cov').style.left   = (basePct + liftPct).toFixed(1) + '%';
+  document.getElementById('bar-cov').style.width  = covPct.toFixed(1) + '%';
+  document.getElementById('bar-pct').textContent  = '+' + totalLiftPct + '% total lift';
+
+  document.getElementById('s-base-contract').textContent = fmt(baseFee) + '/mo';
+  document.getElementById('s-base-mo').textContent       = fmt(baseMo);
+  document.getElementById('s-new-mo').textContent        = fmt(newMo);
+  document.getElementById('s-lift-mo').textContent       = fmt(liftMo) + '/mo';
+  document.getElementById('s-net').textContent           = fmt(netMo) + '/mo';
+  document.getElementById('s-roi').textContent           = roi + 'x return on contract';
+
+  const prodOn = document.getElementById('prod-toggle').checked;
+  if (prodOn && currentProd) {
+    const prodCost  = PROD_COST[currentProd];
+    const paybackMo = netMo > 0 ? (prodCost / netMo) : null;
+    document.getElementById('s-prod').textContent    = fmt(prodCost) + ' one-time';
+    document.getElementById('s-payback').textContent = paybackMo ? paybackMo.toFixed(1) + ' months' : '—';
+  }
+
+  lastData = {
+    venueName: document.getElementById('vname').value || 'Your Venue',
+    venueType: document.getElementById('vtype').value,
+    cap, spend, occ: Math.round(occ * 100), acts,
+    contractTerm, baseFee, discountAmt, effectiveFee, termSavings,
+    tier: currentTier, tierLabel: TIERS[currentTier].label, tierNights: TIERS[currentTier].nights,
+    baseWeekly: Math.round(baseWeekly), liftedWeekly: Math.round(liftedWeekly),
+    coverWeekly: Math.round(coverWeekly), totalWeekly: Math.round(totalWeekly),
+    baseMo: Math.round(baseMo), newMo: Math.round(newMo),
+    liftMo: Math.round(liftMo), netMo: Math.round(netMo),
+    roi, totalLiftPct, coverOn,
+    coverAmt:    coverOn ? (parseFloat(document.getElementById('cover-amt').value)    || 15) : 0,
+    coverNights: coverOn ? (parseFloat(document.getElementById('cover-nights').value) || 2)  : 0,
+    prodOn: prodOn && !!currentProd, prodTier: currentProd,
+    prodCost:   (prodOn && currentProd) ? PROD_COST[currentProd] : 0,
+    paybackMo:  (prodOn && currentProd && netMo > 0) ? +((PROD_COST[currentProd]) / netMo).toFixed(1) : null
+  };
+}
+
+async function generate() {
+  if (!lastData) { alert('Please adjust the inputs first.'); return; }
+  const btn = document.getElementById('gen-btn');
+  const status = document.getElementById('ai-status');
+  btn.disabled = true;
+  status.classList.remove('hidden');
+
+  const msgs = exportType === 'pdf'
+    ? ['Drafting proposal narrative…', 'Building revenue breakdown…', 'Formatting the document…']
+    : ['Crafting slide headline…', 'Laying out key metrics…', 'Polishing the design…'];
+  let mi = 0;
+  status.innerHTML = '<div class="spinner"></div><span id="smsg">' + msgs[0] + '</span>';
+  const iv = setInterval(() => { mi=(mi+1)%msgs.length; const el=document.getElementById('smsg'); if(el) el.textContent=msgs[mi]; }, 2200);
+
+  const d = lastData;
+  const is12 = d.contractTerm === 12;
+  const discountLine = is12
+    ? `12-month contract. 5% discount applied: saves ${fmt(d.discountAmt)}/month (${fmt(d.termSavings)} total). Effective rate: ${fmt(d.effectiveFee)}/mo.`
+    : `6-month contract at ${fmt(d.baseFee)}/month.`;
+
+  const pdfPrompt = `You are creating a professional sales proposal one-pager for Stratus Entertainment Group to send to a venue prospect. Output ONLY a complete self-contained HTML document (DOCTYPE, html, head, body) that looks premium when printed or saved as PDF. White background, dark charcoal text (#1a1a18), teal accents (#1D9E75 / #0F6E56). Import Google Fonts 'DM Serif Display' for headings and 'DM Sans' for body. No other external dependencies.
+
+DATA:
+Venue: ${d.venueName} (${d.venueType}) | Capacity: ${d.cap} | Avg spend: $${d.spend}/guest | Occupancy: ${d.occ}%
+Acts/week: ${d.acts} | Tier: ${d.tier.toUpperCase()} — ${d.tierLabel}
+Contract: ${discountLine}
+${d.prodOn ? 'Production kit: ' + d.prodTier + ' ($' + d.prodCost.toLocaleString() + ' one-time, payback ~' + d.paybackMo + ' months)' : ''}
+${d.coverOn ? 'Cover charge: $' + d.coverAmt + '/person × ' + d.coverNights + ' nights/week' : ''}
+Baseline monthly rev: ${fmt(d.baseMo)} → With Stratus: ${fmt(d.newMo)}
+Monthly lift: ${fmt(d.liftMo)} | Net gain after contract: ${fmt(d.netMo)}/mo | ROI: ${d.roi}x | Total lift: +${d.totalLiftPct}%
+
+STRUCTURE (in order):
+1. Header — "Stratus Entertainment Group" small caps, then venue name as proposal subject line
+2. Executive summary — 2–3 sentences, speak directly to the owner, confident and human tone
+3. "What's included" — tier benefits in flowing prose, not bullets
+4. Revenue impact — display the 5 key numbers prominently (baseline → lifted → lift → net gain → ROI) using a clean card or table layout; include the stacked bar concept visually if possible using pure CSS
+5. Contract summary — term, rate, discount (if 12-month), production kit (if applicable)
+6. Closing paragraph + CTA line
+7. Footer — "Stratus Entertainment Group · stratuseg.com"
+
+Style rules: generous whitespace, no clip-art, teal for accent elements only, serif for headings, sans for data. Output ONLY the HTML.`;
+
+  const slidePrompt = `You are creating a single sales pitch slide for Stratus Entertainment Group. Output ONLY a complete self-contained HTML document (DOCTYPE, html, head, body). The slide must fill a 16:9 viewport (1280×720px logical, use a fixed-size container centered on the page). Dark forest background (#0a1a11), teal accent (#1D9E75), white text. Google Fonts: 'DM Serif Display' for display, 'DM Sans' for data. No scroll, no overflow — everything fits in one screen.
+
+DATA:
+Venue: ${d.venueName} (${d.venueType}) | Tier: ${d.tier.toUpperCase()}
+Contract: ${discountLine}
+${d.coverOn ? 'Cover: $' + d.coverAmt + '/person × ' + d.coverNights + ' nights/week' : ''}
+Baseline monthly: ${fmt(d.baseMo)} → With Stratus: ${fmt(d.newMo)}
+Net monthly gain: ${fmt(d.netMo)} | ROI: ${d.roi}x | Total lift: +${d.totalLiftPct}%
+${is12 ? '12-month savings: ' + fmt(d.termSavings) : ''}
+
+LAYOUT:
+- Top-left corner: "STRATUS" small brand label
+- Large serif headline: punchy 7–10 word value statement tailored to ${d.venueName}
+- 3–4 hero metric cards (dark surface, teal accent border) showing the most important numbers
+- A simple CSS bar visualization: baseline revenue vs Stratus revenue (two horizontal bars)
+- Bottom strip: tier name · contract term · "Let's build your entertainment program."
+Output ONLY the HTML.`;
+
+  try {
+    const resp = await fetch(PROXY_URL + '/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: exportType === 'pdf' ? pdfPrompt : slidePrompt }]
+      })
+    });
+    const data = await resp.json();
+    clearInterval(iv);
+    const raw = data.content.map(b => b.text || '').join('');
+    const m = raw.match(/<!DOCTYPE html[\s\S]*<\/html>/i) || raw.match(/<html[\s\S]*<\/html>/i);
+    lastHtml = m ? m[0] : raw.replace(/```html?|```/g,'').trim();
+    renderPreview();
+  } catch(err) {
+    clearInterval(iv);
+    status.innerHTML = '<span style="color:#A32D2D">Generation failed — check your connection and try again.</span>';
+    btn.disabled = false;
+  }
+}
+
+function renderPreview() {
+  document.getElementById('gen-btn').disabled = false;
+  document.getElementById('ai-status').classList.add('hidden');
+  document.getElementById('preview-label').textContent = exportType === 'pdf' ? 'PDF one-pager preview' : 'Pitch slide preview';
+  const iframe = document.getElementById('preview-iframe');
+  iframe.style.minHeight = exportType === 'slide' ? '500px' : '760px';
+  iframe.srcdoc = lastHtml;
+  document.getElementById('preview-backdrop').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePreview() {
+  document.getElementById('preview-backdrop').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function downloadProposal() {
+  if (!lastHtml) return;
+  const name = (lastData && lastData.venueName) ? lastData.venueName.replace(/\s+/g,'_') : 'Proposal';
+  const file = 'Stratus_' + name + '_' + (exportType === 'slide' ? 'Slide' : 'Proposal') + '.html';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lastHtml], {type:'text/html'}));
+  a.download = file;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+document.getElementById('preview-backdrop').addEventListener('click', function(e) {
+  if (e.target === this) closePreview();
+});
+
+setTier('premium');
+setTerm(6);
+selectExport('pdf');
+document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calc));
+calc();
+</script>
+</body>
+</html>
