@@ -31,7 +31,6 @@ app.get('/', (req, res) => {
 });
 
 // Anthropic proxy
-Anthropic proxy
 app.post('/api/generate', async (req, res) => {
   try {
     console.log('Generate request received:', JSON.stringify(req.body).substring(0, 500));
@@ -61,22 +60,8 @@ app.post('/api/generate', async (req, res) => {
     res.status(500).json({ error: 'Proxy request failed', detail: err.message });
   }
 });
-    });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return res.status(response.status).json(data);
-    }
-
-    res.json(data);
-  } catch (err) {
-    console.error('Proxy error:', err.message);
-    res.status(500).json({ error: 'Proxy request failed', detail: err.message });
-  }
-});
-
-Catch-all 404 handler
+// Catch-all 404 handler
 app.use((req, res) => {
   console.log('404 - Path not found:', req.method, req.path);
   res.status(404).json({ error: 'Not found', path: req.path });
