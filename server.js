@@ -31,8 +31,11 @@ app.get('/', (req, res) => {
 });
 
 // Anthropic proxy
+Anthropic proxy
 app.post('/api/generate', async (req, res) => {
   try {
+    console.log('Generate request received:', JSON.stringify(req.body).substring(0, 500));
+    
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -41,6 +44,23 @@ app.post('/api/generate', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify(req.body)
+    });
+
+    console.log('Anthropic response status:', response.status);
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Anthropic error:', JSON.stringify(data));
+      return res.status(response.status).json(data);
+    }
+
+    res.json(data);
+  } catch (err) {
+    console.error('Proxy error:', err.message);
+    console.error('Error stack:', err.stack);
+    res.status(500).json({ error: 'Proxy request failed', detail: err.message });
+  }
+});
     });
 
     const data = await response.json();
