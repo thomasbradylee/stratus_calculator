@@ -1,6 +1,5 @@
 require('dotenv').config();
 
-const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -8,6 +7,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.ANTHROPIC_API_KEY || '';
+const fs = require('fs');
 
 if (!API_KEY) {
   console.error('ERROR: ANTHROPIC_API_KEY environment variable is not set.');
